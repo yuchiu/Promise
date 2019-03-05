@@ -4,16 +4,25 @@ class Promise{
         executor(this._resolve.bind(this));
     }
 
-
     _resolve(value){
         while(this._resolutionQueue.length){
-            const handler = this._resolutionQueue.shift()
-            handler(value)
+            const resolution = this._resolutionQueue.shift()
+            const returnValue = resolution.handler(value)
+            if(returnValue instanceof Promise){
+                returnValue.then((v)=>{
+                    resolution.promise._resolve(v)
+                })
+            }
         }
     }
 
     then (resolutionHandler){
-        this._resolutionQueue.push(resolutionHandler)
+        const newPromise = new Promise(()=>{})
+        this._resolutionQueue.push({
+            handler: resolutionHandler,
+            promise: newPromise
+        })
+        return newPromise
     }
 }
 
